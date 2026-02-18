@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Student Results Portal</title>
-  
+   
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -147,7 +147,7 @@
       border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color);
       border-radius: 50%; animation: spin 1s linear infinite;
     }
-    
+     
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     @keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
@@ -228,7 +228,8 @@
     // ⚠️ PASTE YOUR TWO GOOGLE DEPLOYMENT URLs ⚠️
     // ============================================
     const ACCUMULATIVE_URL = "https://script.google.com/macros/s/AKfycbydAUM1mn7OKrydMQK8c95mbSSt_IgKVKZeeI79dgkdGmLLbTraZ5gA2F-WwXaoXJSZ/exec"; 
-    const SECOND_YEAR_URL = "https://script.google.com/macros/s/AKfycbz7u3-dGG7RSTxITS0dlUr_eHSZCMHVLktT3N4c7zrJdWdFAg2FxUOZ9nggJdaT6RModQ/exec"; 
+    // 👇👇 PASTE THE NEW SCRIPT URL FOR THE 2ND YEAR HERE 👇👇
+    const SECOND_YEAR_URL = "https://script.google.com/macros/s/AKfycby_oBtrEQRlHZwp8BKLHD-wUZG3FZkMpusXyF5ScgRMsUt8guNcWPC-LZeuVLHl8A95qA/exec"; 
 
     let currentMode = 'accumulative';
 
@@ -275,36 +276,74 @@
           document.getElementById('loader').style.display = 'none';
 
           if (data.found) {
-            document.getElementById('resName').innerText = data.name;
-            document.getElementById('resSeat').innerText = "Seat: " + data.seat;
-            document.getElementById('resRank').innerText = "#" + data.rank;
-            document.getElementById('resTotal').innerText = data.total;
-            document.getElementById('resPercent').innerText = data.percent;
-            document.getElementById('resEval').innerText = data.evaluation;
+            
+            // =========================================
+            // 🆕 START: SPLIT LOGIC FOR YEAR 2 vs ACCUM
+            // =========================================
+            if (currentMode === 'year2') {
+                // >>> LOGIC SPECIFIC TO THE 2ND YEAR FILE <<<
+                
+                document.getElementById('resName').innerText = data.name;
+                document.getElementById('resSeat').innerText = "Seat: " + data.seat;
+                document.getElementById('resRank').innerText = "#" + data.rank;
+                document.getElementById('resTotal').innerText = data.total;
+                document.getElementById('resPercent').innerText = data.percent;
+                document.getElementById('resEval').innerText = data.evaluation;
 
-            const evalText = data.evaluation || "";
-            let gradeClass = 'bg-Default';
-            let circleText = evalText.charAt(0);
+                const evalText = data.evaluation || "";
+                let gradeClass = 'bg-Default';
+                let circleText = evalText.charAt(0);
 
-            if (evalText.includes("Excellent") || evalText.includes("امتياز")) {
-                gradeClass = "bg-Excellent"; circleText = "Ex";
-            } else if (evalText.includes("Very Good") || evalText.includes("جيد جدا")) {
-                gradeClass = "bg-Very"; circleText = "Vg";
-            } else if (evalText.includes("Good") || evalText.includes("جيد")) {
-                gradeClass = "bg-Good"; circleText = "Gd";
-            } else if (evalText.includes("F") || evalText.includes("Fail")) {
-                gradeClass = "bg-F"; circleText = "F";
+                // MATCH ARABIC TERMS FROM YOUR CSV (e.g. "ممتاز")
+                if (evalText.includes("Excellent") || evalText.includes("ممتاز")) {
+                    gradeClass = "bg-Excellent"; circleText = "Ex";
+                } else if (evalText.includes("Very Good") || evalText.includes("جيد جدا")) {
+                    gradeClass = "bg-Very"; circleText = "Vg";
+                } else if (evalText.includes("Good") || evalText.includes("جيد")) {
+                    gradeClass = "bg-Good"; circleText = "Gd";
+                } else if (evalText.includes("F") || evalText.includes("Fail") || evalText.includes("راسب")) {
+                    gradeClass = "bg-F"; circleText = "F";
+                }
+
+                // Render Badge
+                const circle = document.getElementById('gradeCircle');
+                circle.innerText = circleText;
+                circle.className = 'grade-circle ' + gradeClass;
+
+            } else {
+                // >>> EXISTING LOGIC FOR ACCUMULATIVE (UNCHANGED) <<<
+                document.getElementById('resName').innerText = data.name;
+                document.getElementById('resSeat').innerText = "Seat: " + data.seat;
+                document.getElementById('resRank').innerText = "#" + data.rank;
+                document.getElementById('resTotal').innerText = data.total;
+                document.getElementById('resPercent').innerText = data.percent;
+                document.getElementById('resEval').innerText = data.evaluation;
+
+                const evalText = data.evaluation || "";
+                let gradeClass = 'bg-Default';
+                let circleText = evalText.charAt(0);
+
+                // Original check for Accumulative
+                if (evalText.includes("Excellent") || evalText.includes("امتياز")) {
+                    gradeClass = "bg-Excellent"; circleText = "Ex";
+                } else if (evalText.includes("Very Good") || evalText.includes("جيد جدا")) {
+                    gradeClass = "bg-Very"; circleText = "Vg";
+                } else if (evalText.includes("Good") || evalText.includes("جيد")) {
+                    gradeClass = "bg-Good"; circleText = "Gd";
+                } else if (evalText.includes("F") || evalText.includes("Fail")) {
+                    gradeClass = "bg-F"; circleText = "F";
+                }
+
+                const circle = document.getElementById('gradeCircle');
+                circle.innerText = circleText;
+                circle.className = 'grade-circle ' + gradeClass;
             }
 
-            const circle = document.getElementById('gradeCircle');
-            circle.innerText = circleText;
-            circle.className = 'grade-circle ' + gradeClass;
-
             document.getElementById('resultArea').style.display = 'block';
+
           } else {
             document.getElementById('errorMsg').style.display = 'block';
             document.querySelector('.portal-card').style.animation = 'shake 0.5s';
-            // Reset animation after it finishes to allow re-shake
             setTimeout(() => { document.querySelector('.portal-card').style.animation = ''; }, 500);
           }
         })
@@ -324,5 +363,3 @@
 
 </body>
 </html>
-
-
