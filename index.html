@@ -27,7 +27,6 @@
       justify-content: center;
       color: #333;
       margin: 0;
-      /* Background Image */
       background-image: url('background.jpg'); 
       background-size: cover;
       background-position: center;
@@ -66,6 +65,34 @@
 
     .card-body { padding: 30px; }
 
+    /* New Selector Buttons */
+    .database-selector {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 25px;
+      background: rgba(0,0,0,0.05);
+      padding: 5px;
+      border-radius: 15px;
+    }
+
+    .selector-btn {
+      flex: 1;
+      border: none;
+      padding: 10px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: 0.3s;
+      background: transparent;
+      color: #64748b;
+    }
+
+    .selector-btn.active {
+      background: white;
+      color: var(--primary-color);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
     .form-control {
       border-radius: 15px; height: 60px; font-size: 1.1rem; text-align: center;
       border: 2px solid #e2e8f0;
@@ -75,7 +102,7 @@
     .btn-search {
       background: linear-gradient(90deg, var(--primary-color), #0056b3);
       border: none; border-radius: 15px; padding: 16px;
-      font-weight: 600; width: 100%; margin-top: 25px; color: white;
+      font-weight: 600; width: 100%; margin-top: 15px; color: white;
       transition: 0.3s;
     }
     .btn-search:hover { transform: translateY(-2px); }
@@ -100,7 +127,6 @@
     .result-label { color: #64748b; font-weight: 500; }
     .result-value { font-weight: 700; color: #1e293b; }
 
-    /* Grade Circle */
     .grade-badge-container { text-align: center; margin-bottom: 15px; }
     .grade-circle {
       width: 100px; height: 100px; border-radius: 50%; display: inline-flex;
@@ -109,7 +135,7 @@
     }
     .eval-text { margin-top: 10px; font-weight: 700; font-size: 1.2rem; }
 
-    /* Colors */
+    /* Grade Colors */
     .bg-Excellent { background: linear-gradient(135deg, #10b981, #059669); }
     .bg-Very { background: linear-gradient(135deg, #3b82f6, #2563eb); }
     .bg-Good { background: linear-gradient(135deg, #f59e0b, #d97706); }
@@ -133,17 +159,26 @@
   <div class="portal-card">
     <div class="card-header">
       <div class="icon-header"><i class="fas fa-university"></i></div>
-      <h2>Student Results</h2>
+      <h2 id="portalTitle">Student Results</h2>
       <p class="text-muted small">Faculty of Medicine - AFM</p>
     </div>
 
     <div class="card-body">
+      <div class="database-selector">
+        <button id="btnAccum" class="selector-btn active" onclick="setMode('accumulative')">
+          <i class="fas fa-chart-line me-1"></i> Accumulative
+        </button>
+        <button id="btnYear2" class="selector-btn" onclick="setMode('year2')">
+          <i class="fas fa-graduation-cap me-1"></i> 2nd Year
+        </button>
+      </div>
+
       <div class="form-floating mb-3">
         <input type="text" class="form-control" id="seatInput" placeholder="Seat Number">
         <label for="seatInput" class="text-muted">Enter Seat Number</label>
       </div>
       
-      <button class="btn btn-search" onclick="searchResult()">
+      <button class="btn btn-search" id="searchBtn" onclick="searchResult()">
         <i class="fas fa-search me-2"></i> Get Result
       </button>
 
@@ -183,19 +218,39 @@
 
   <script>
     // ============================================
-    // ⚠️ PASTE YOUR GOOGLE DEPLOYMENT URL HERE ⚠️
+    // ⚠️ PASTE YOUR TWO GOOGLE DEPLOYMENT URLs ⚠️
     // ============================================
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbydAUM1mn7OKrydMQK8c95mbSSt_IgKVKZeeI79dgkdGmLLbTraZ5gA2F-WwXaoXJSZ/exec"; 
+    const ACCUMULATIVE_URL = "https://script.google.com/macros/s/AKfycbydAUM1mn7OKrydMQK8c95mbSSt_IgKVKZeeI79dgkdGmLLbTraZ5gA2F-WwXaoXJSZ/exec"; 
+    const SECOND_YEAR_URL = "PASTE_YOUR_2ND_YEAR_SCRIPT_URL_HERE"; 
+
+    let currentMode = 'accumulative';
+
+    function setMode(mode) {
+      currentMode = mode;
+      // Toggle button UI
+      document.getElementById('btnAccum').classList.toggle('active', mode === 'accumulative');
+      document.getElementById('btnYear2').classList.toggle('active', mode === 'year2');
+      
+      // Update Title for clarity
+      document.getElementById('portalTitle').innerText = (mode === 'accumulative') ? "Accumulative Result" : "2nd Year Result";
+      
+      // Clear current results if any
+      document.getElementById('resultArea').style.display = 'none';
+      document.getElementById('errorMsg').style.display = 'none';
+    }
 
     function searchResult() {
       const seatRaw = document.getElementById('seatInput').value;
       const seat = seatRaw ? seatRaw.trim() : "";
-      const btn = document.querySelector('.btn-search');
+      const btn = document.getElementById('searchBtn');
       
       if (!seat) {
         document.getElementById('seatInput').focus();
         return;
       }
+
+      // Determine which URL to use
+      const SCRIPT_URL = (currentMode === 'accumulative') ? ACCUMULATIVE_URL : SECOND_YEAR_URL;
 
       // UI Reset
       document.getElementById('loader').style.display = 'block';
@@ -213,7 +268,6 @@
           document.getElementById('loader').style.display = 'none';
 
           if (data.found) {
-            // Update Text
             document.getElementById('resName').innerText = data.name;
             document.getElementById('resSeat').innerText = "Seat: " + data.seat;
             document.getElementById('resRank').innerText = "#" + data.rank;
@@ -221,7 +275,6 @@
             document.getElementById('resPercent').innerText = data.percent;
             document.getElementById('resEval').innerText = data.evaluation;
 
-            // Visual Logic
             const evalText = data.evaluation || "";
             let gradeClass = 'bg-Default';
             let circleText = evalText.charAt(0);
@@ -244,6 +297,8 @@
           } else {
             document.getElementById('errorMsg').style.display = 'block';
             document.querySelector('.portal-card').style.animation = 'shake 0.5s';
+            // Reset animation after it finishes to allow re-shake
+            setTimeout(() => { document.querySelector('.portal-card').style.animation = ''; }, 500);
           }
         })
         .catch(error => {
@@ -251,11 +306,10 @@
           btn.disabled = false;
           btn.innerHTML = 'Get Result';
           document.getElementById('loader').style.display = 'none';
-          alert("Connection failed. Check the Script URL.");
+          alert("Connection failed. Check the Script URL for " + currentMode);
         });
     }
 
-    // Trigger on Enter key
     document.getElementById("seatInput").addEventListener("keypress", function(e) {
       if (e.key === "Enter") searchResult();
     });
@@ -263,5 +317,3 @@
 
 </body>
 </html>
-
-
