@@ -147,7 +147,7 @@
       border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color);
       border-radius: 50%; animation: spin 1s linear infinite;
     }
-     
+      
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     @keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
@@ -177,7 +177,7 @@
         <input type="text" class="form-control" id="seatInput" placeholder="Seat Number">
         <label for="seatInput" class="text-muted">Enter Seat Number</label>
       </div>
-      
+       
       <button class="btn btn-search" id="searchBtn" onclick="searchResult()">
         <i class="fas fa-search me-2"></i> Get Result
       </button>
@@ -238,10 +238,10 @@
       // Toggle button UI
       document.getElementById('btnAccum').classList.toggle('active', mode === 'accumulative');
       document.getElementById('btnYear2').classList.toggle('active', mode === 'year2');
-      
+       
       // Update Title for clarity
       document.getElementById('portalTitle').innerText = (mode === 'accumulative') ? "Accumulative Result" : "2nd Year Result";
-      
+       
       // Clear current results if any
       document.getElementById('resultArea').style.display = 'none';
       document.getElementById('errorMsg').style.display = 'none';
@@ -251,7 +251,7 @@
       const seatRaw = document.getElementById('seatInput').value;
       const seat = seatRaw ? seatRaw.trim() : "";
       const btn = document.getElementById('searchBtn');
-      
+       
       if (!seat) {
         document.getElementById('seatInput').focus();
         return;
@@ -276,7 +276,7 @@
           document.getElementById('loader').style.display = 'none';
 
           if (data.found) {
-            
+             
             // =========================================
             // 🆕 START: SPLIT LOGIC FOR YEAR 2 vs ACCUM
             // =========================================
@@ -311,28 +311,42 @@
                 circle.className = 'grade-circle ' + gradeClass;
 
             } else {
-                // >>> EXISTING LOGIC FOR ACCUMULATIVE (UNCHANGED) <<<
+                // >>> MODIFIED LOGIC FOR ACCUMULATIVE <<<
+                // The new backend for Accumulative returns "Pass/Fail" but no specific grade (e.g. "Excellent").
+                // We calculate it here based on percentage.
+
                 document.getElementById('resName').innerText = data.name;
                 document.getElementById('resSeat').innerText = "Seat: " + data.seat;
                 document.getElementById('resRank').innerText = "#" + data.rank;
                 document.getElementById('resTotal').innerText = data.total;
                 document.getElementById('resPercent').innerText = data.percent;
-                document.getElementById('resEval').innerText = data.evaluation;
-
-                const evalText = data.evaluation || "";
+                
+                // --- Grade Calculation Logic ---
+                let percentage = parseFloat(data.percent); // parses "88.5%" to 88.5
+                let computedEval = "Pass"; 
                 let gradeClass = 'bg-Default';
-                let circleText = evalText.charAt(0);
-
-                // Original check for Accumulative
-                if (evalText.includes("Excellent") || evalText.includes("امتياز")) {
-                    gradeClass = "bg-Excellent"; circleText = "Ex";
-                } else if (evalText.includes("Very Good") || evalText.includes("جيد جدا")) {
-                    gradeClass = "bg-Very"; circleText = "Vg";
-                } else if (evalText.includes("Good") || evalText.includes("جيد")) {
-                    gradeClass = "bg-Good"; circleText = "Gd";
-                } else if (evalText.includes("F") || evalText.includes("Fail")) {
-                    gradeClass = "bg-F"; circleText = "F";
+                let circleText = "P";
+                
+                // If backend explicitly says Fail/Absent, use that
+                if (data.evaluation === "Fail" || data.evaluation === "Absent" || data.evaluation === "راسب") {
+                    computedEval = data.evaluation;
+                    gradeClass = "bg-F";
+                    circleText = "F";
+                } else if (!isNaN(percentage)) {
+                    // Standard Grading Scale
+                    if (percentage >= 85) {
+                        gradeClass = "bg-Excellent"; circleText = "Ex"; computedEval = "Excellent";
+                    } else if (percentage >= 75) {
+                        gradeClass = "bg-Very"; circleText = "Vg"; computedEval = "Very Good";
+                    } else if (percentage >= 65) {
+                        gradeClass = "bg-Good"; circleText = "Gd"; computedEval = "Good";
+                    } else {
+                        // Between 0 and 65
+                        gradeClass = "bg-Default"; circleText = "P"; computedEval = "Pass";
+                    }
                 }
+
+                document.getElementById('resEval').innerText = computedEval;
 
                 const circle = document.getElementById('gradeCircle');
                 circle.innerText = circleText;
@@ -363,4 +377,3 @@
 
 </body>
 </html>
-
